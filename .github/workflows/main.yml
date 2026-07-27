@@ -20,15 +20,28 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Dynamically upgrades compileSdk to 36 and enables multidex/desugaring on the fly
+    # Safe block-appended patch strategy for compileSdk and desugaring
     - name: Patch Build Configurations
       working-directory: ./physio_app/android/app
       run: |
         sed -i 's/compileSdk = .*/compileSdk = 36/g' build.gradle
         sed -i 's/compileSdkVersion .*/compileSdkVersion 36/g' build.gradle
-        sed -i '/defaultConfig {/a \        multiDexEnabled true' build.gradle
-        sed -i '/compileOptions {/a \        coreLibraryDesugaringEnabled true' build.gradle
-        sed -i '/dependencies {/a \    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"' build.gradle
+        
+        cat << 'EOF' >> build.gradle
+
+        // Injected by GitHub Actions pipeline to solve package dependencies
+        android {
+            defaultConfig {
+                multiDexEnabled true
+            }
+            compileOptions {
+                coreLibraryDesugaringEnabled true
+            }
+        }
+        dependencies {
+            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
+        }
+        EOF
 
     - name: Build APK
       working-directory: ./physio_app
