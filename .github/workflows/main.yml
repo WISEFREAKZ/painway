@@ -1,4 +1,4 @@
-name: Compile Android App
+name: Compile Flutter Android App
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -6,39 +6,29 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # This step locates where your Android project actually is hidden
-    - name: Find Android Project Directory
-      id: locate
-      run: |
-        DIR=$(find . -name "gradlew" -exec dirname {} \;)
-        if [ -z "$DIR" ]; then
-          DIR=$(find . -name "build.gradle" -exec dirname {} \; | head -n 1)
-        fi
-        if [ -z "$DIR" ]; then DIR="."; fi
-        echo "project_dir=$DIR" >> $GITHUB_OUTPUT
-        echo "Found project directory at: $DIR"
-
-    - name: Set up JDK 17
+    - name: Set up Java
       uses: actions/setup-java@v4
-      with: {java-version: '17', distribution: 'temurin', cache: 'gradle'}
+      with: {java-version: '17', distribution: 'temurin'}
 
-    # If gradlew is completely missing, this command creates a fresh wrapper automatically
-    - name: Ensure Gradle Wrapper Exists
-      working-directory: ${{ steps.locate.outputs.project_dir }}
-      run: |
-        if [ ! -f ./gradlew ]; then
-          gradle wrapper
-        fi
-        chmod +x ./gradlew
+    # This installs Flutter onto the cloud runner
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
 
-    - name: Compile Debug APK
-      working-directory: ${{ steps.locate.outputs.project_dir }}
-      run: ./gradlew assembleDebug
+    # Downloads packages and auto-generates the local.properties file
+    - name: Install Dependencies
+      working-directory: ./physio_app
+      run: flutter pub get
+
+    # Compiles the clean Android APK using Flutter's native pipeline
+    - name: Build APK
+      working-directory: ./physio_app
+      run: flutter build apk --debug
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
-        name: my-android-app
-        path: |
-          ${{ steps.locate.outputs.project_dir }}/app/build/outputs/apk/debug/*.apk
-          ${{ steps.locate.outputs.project_dir }}/build/outputs/apk/debug/*.apk
+        name: my-flutter-android-app
+        path: physio_app/build/app/outputs/flutter-apk/app-debug.apk
