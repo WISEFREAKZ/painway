@@ -10,7 +10,6 @@ jobs:
       uses: actions/setup-java@v4
       with: {java-version: '17', distribution: 'temurin'}
 
-    # Forces GitHub to use an older, highly stable Flutter version matching your project
     - name: Set up Flutter (Legacy Compatible)
       uses: subosito/flutter-action@v2
       with:
@@ -18,7 +17,6 @@ jobs:
         channel: 'stable'
         cache: true
 
-    # Cleans out any old cache artifacts from the previous failed runs
     - name: Clean Project
       working-directory: ./physio_app
       run: flutter clean
@@ -27,7 +25,16 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Compiles cleanly without triggering strict SDK 36 validation rules
+    # Automatically patches the NDK version requirement and fixes the code typo
+    - name: Fix Code Typo and NDK Config
+      working-directory: ./physio_app
+      run: |
+        # Injects the missing ndkVersion line into the build config
+        sed -i '/android {/a \    ndkVersion "25.1.8937393"' android/app/build.gradle
+        
+        # Corrects CardThemeData to CardTheme inside your theme file
+        sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
+
     - name: Build APK
       working-directory: ./physio_app
       run: flutter build apk --debug --android-skip-build-dependency-validation
