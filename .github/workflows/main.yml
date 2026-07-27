@@ -25,15 +25,30 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Automatically patches the NDK version requirement and fixes the code typo
-    - name: Fix Code Typo and NDK Config
+    # Fixes the code typo and appends ALL required NDK and desugaring blocks safely
+    - name: Fix Code Typo and App Configs
       working-directory: ./physio_app
       run: |
-        # Injects the missing ndkVersion line into the build config
-        sed -i '/android {/a \    ndkVersion "25.1.8937393"' android/app/build.gradle
-        
         # Corrects CardThemeData to CardTheme inside your theme file
         sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
+        
+        # Safely appends the NDK version, multiDex, and desugaring setups to the end of build.gradle
+        cat << 'EOF' >> android/app/build.gradle
+
+        // Injected by GitHub Actions pipeline to solve final package constraints
+        android {
+            ndkVersion "25.1.8937393"
+            defaultConfig {
+                multiDexEnabled true
+            }
+            compileOptions {
+                coreLibraryDesugaringEnabled true
+            }
+        }
+        dependencies {
+            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
+        }
+        EOF
 
     - name: Build APK
       working-directory: ./physio_app
