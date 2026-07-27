@@ -20,28 +20,32 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Upgrades compileSdk, configures desugaring, and disables the meta-checks causing the failure
+    # Directly upgrades the Android Gradle Plugin to 8.9.1 to satisfy the packages
     - name: Patch Build Configurations
-      working-directory: ./physio_app/android/app
+      working-directory: ./physio_app/android
       run: |
+        # Upgrade AGP version in settings.gradle if it uses the modern plugins block
+        if [ -f settings.gradle ]; then
+          sed -i 's/id "com.android.application" version .*/id "com.android.application" version "8.9.1"/g' settings.gradle
+        fi
+        
+        # Upgrade AGP version in build.gradle if it uses the older classpath style
+        if [ -f build.gradle ]; then
+          sed -i 's/com.android.tools.build:gradle:.*/com.android.tools.build:gradle:8.9.1"/g' build.gradle
+        fi
+
+        # Safely inject the required desugaring configurations to the app module
+        cd app
         sed -i 's/compileSdk = .*/compileSdk = 36/g' build.gradle
         sed -i 's/compileSdkVersion .*/compileSdkVersion 36/g' build.gradle
         
         cat << 'EOF' >> build.gradle
-
-        // Injected by GitHub Actions pipeline to bypass AGP metadata conflicts
         android {
             defaultConfig {
                 multiDexEnabled true
             }
             compileOptions {
                 coreLibraryDesugaringEnabled true
-            }
-            // Disables the strict check checking for Android Gradle Plugin 8.9.1
-            tasks.whenTaskAdded { task ->
-                if (task.name.contains("CheckAarMetadata")) {
-                    task.enabled = false
-                }
             }
         }
         dependencies {
