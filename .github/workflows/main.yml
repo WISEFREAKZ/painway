@@ -52,10 +52,10 @@ jobs:
 
     - name: Build APK
       working-directory: ./physio_app
-      run: flutter build apk --debug --android-skip-build-dependency-validation
+      run: flutter build apk --release --android-skip-build-dependency-validation
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: my-flutter-android-app
-        path: physio_app/build/app/outputs/flutter-apk/app-debug.apk
+        path: physio_app/build/app/outputs/flutter-apk/app-release.apk
