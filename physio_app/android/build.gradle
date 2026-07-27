@@ -1,0 +1,25 @@
+// NOTE: no `buildscript {}` block here on purpose. The Android Gradle
+// Plugin and Kotlin Gradle Plugin versions are declared exactly once,
+// in android/settings.gradle's pluginManagement block. Declaring them
+// again here (the old pre-2024 template style) creates a duplicate
+// plugin-application conflict that can fail tasks like `bundleRelease`
+// even when `assembleRelease` appears to work.
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
