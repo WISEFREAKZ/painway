@@ -10,20 +10,26 @@ jobs:
       uses: actions/setup-java@v4
       with: {java-version: '17', distribution: 'temurin'}
 
-    # This installs Flutter onto the cloud runner
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
         cache: true
 
-    # Downloads packages and auto-generates the local.properties file
     - name: Install Dependencies
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Compiles the clean Android APK using Flutter's native pipeline
-        # Compiles the Android APK bypassing the version check
+    # Dynamically upgrades compileSdk to 36 and enables multidex/desugaring on the fly
+    - name: Patch Build Configurations
+      working-directory: ./physio_app/android/app
+      run: |
+        sed -i 's/compileSdk = .*/compileSdk = 36/g' build.gradle
+        sed -i 's/compileSdkVersion .*/compileSdkVersion 36/g' build.gradle
+        sed -i '/defaultConfig {/a \        multiDexEnabled true' build.gradle
+        sed -i '/compileOptions {/a \        coreLibraryDesugaringEnabled true' build.gradle
+        sed -i '/dependencies {/a \    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"' build.gradle
+
     - name: Build APK
       working-directory: ./physio_app
       run: flutter build apk --debug --android-skip-build-dependency-validation
