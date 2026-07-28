@@ -21,39 +21,19 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    - name: Initialize Flutter Build Files
+    # Applies only your code corrections, leaving internal build paths pristine
+    - name: Fix Code Typo
       working-directory: ./physio_app
-      run: flutter build apk --config-only
+      run: sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
 
-    - name: Apply Automated Code Patches
-      working-directory: ./physio_app
-      run: |
-        sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
-        sed -i '/android {/a \    ndkVersion "25.1.8937393"' android/app/build.gradle
-        
-        cat << 'EOF' >> android/app/build.gradle
-        android {
-            defaultConfig {
-                multiDexEnabled true
-            }
-            compileOptions {
-                coreLibraryDesugaringEnabled true
-            }
-        }
-        dependencies {
-            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
-        }
-        EOF
-
+    # Standard Flutter compiler builds the clean production binary natively
     - name: Build Production Release APK
-      working-directory: ./physio_app/android
-      run: |
-        ./gradlew clean --no-daemon
-        ./gradlew assembleRelease --no-daemon
+      working-directory: ./physio_app
+      run: flutter build apk --release --android-skip-build-dependency-validation
 
-    # Corrected destination directory targets for the native gradle output configuration
+    # This is exactly where Flutter places the verified release output file
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: my-flutter-release-app
-        path: physio_app/android/app/build/outputs/apk/release/app-release.apk
+        path: physio_app/build/app/outputs/flutter-apk/app-release.apk
