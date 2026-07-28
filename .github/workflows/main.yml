@@ -21,17 +21,35 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Applies only your code corrections, leaving internal build paths pristine
-    - name: Fix Code Typo
+    # Locks in all the configurations that bypassed your NDK and notification errors
+    - name: Fix Code Typo and App Configs
       working-directory: ./physio_app
-      run: sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
+      run: |
+        sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
+        
+        cat << 'EOF' >> android/app/build.gradle
 
-    # Standard Flutter compiler builds the clean production binary natively
-    - name: Build Production Release APK
+        // Injected by GitHub Actions pipeline to solve final package constraints
+        android {
+            ndkVersion "25.1.8937393"
+            defaultConfig {
+                multiDexEnabled true
+            }
+            compileOptions {
+                coreLibraryDesugaringEnabled true
+            }
+        }
+        dependencies {
+            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
+        }
+        EOF
+
+    # The exact command that worked before, just switched to --release
+    - name: Build APK
       working-directory: ./physio_app
       run: flutter build apk --release --android-skip-build-dependency-validation
 
-    # This is exactly where Flutter places the verified release output file
+    # Grabs the compressed production release file from its native path
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
