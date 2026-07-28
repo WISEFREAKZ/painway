@@ -21,15 +21,19 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Compiles release mode via an isolated process to prevent file-watching loops
-    - name: Build APK (Release Mode)
+    # Pre-generates the required Flutter native build files
+    - name: Initialize Flutter Build Files
       working-directory: ./physio_app
-      run: |
-        flutter build apk --release \
-          --android-skip-build-dependency-validation \
-          --no-pub \
-          -- --no-daemon
+      run: flutter build apk --config-only
 
+    # Bypasses the Flutter wrapper entirely to compile using clean, isolated Gradle instructions
+    - name: Build Production Release APK
+      working-directory: ./physio_app/android
+      run: |
+        ./gradlew clean --no-daemon
+        ./gradlew assembleRelease --no-daemon
+
+    # Grabs the newly created release binary file
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
