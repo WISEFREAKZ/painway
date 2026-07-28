@@ -21,10 +21,14 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Compiles the clean release build bypassing the internal lint file-watching error
+    # Compiles release mode via an isolated process to prevent file-watching loops
     - name: Build APK (Release Mode)
       working-directory: ./physio_app
-      run: flutter build apk --release --no-lint --android-skip-build-dependency-validation
+      run: |
+        flutter build apk --release \
+          --android-skip-build-dependency-validation \
+          --no-pub \
+          -- --no-daemon
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
