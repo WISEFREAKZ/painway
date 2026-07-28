@@ -63,11 +63,15 @@ jobs:
                 multiDexEnabled true
             }
 
-            buildTypes {
+                        buildTypes {
                 release {
                     signingConfig signingConfigs.debug
+                    // Injected to link Claude's ProGuard/R8 rules natively
+                    minifyEnabled true
+                    proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
                 }
             }
+
         }
 
         flutter {
