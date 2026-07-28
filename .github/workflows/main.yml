@@ -17,34 +17,63 @@ jobs:
         channel: 'stable'
         cache: true
 
-    # Completely restores modified build files to a factory-fresh state 
-    - name: Reset Residual File Duplications
-      working-directory: ./physio_app
-      run: |
-        flutter clean
-        git checkout -- android/app/build.gradle || true
-        git checkout -- lib/theme.dart || true
-
     - name: Install Dependencies
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Safely injects the configurations onto a 100% clean canvas
+    # Fixes the code typo and forces a brand new, perfectly formatted configuration file
     - name: Apply Fresh Code Patches
       working-directory: ./physio_app
       run: |
         sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
-        sed -i '/android {/a \    ndkVersion "25.1.8937393"' android/app/build.gradle
         
-        cat << 'EOF' >> android/app/build.gradle
+        # Overwrites the app's build.gradle completely with a flawless, compliant configuration
+        cat << 'EOF' > android/app/build.gradle
+        plugins {
+            id "com.android.application"
+            id "kotlin-android"
+            id "dev.flutter.flutter-gradle-plugin"
+        }
+
         android {
-            defaultConfig {
-                multiDexEnabled true
-            }
+            namespace "com.example.physio_app"
+            compileSdk 34
+            ndkVersion "25.1.8937393"
+
             compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
                 coreLibraryDesugaringEnabled true
             }
+
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+
+            sourceSets {
+                main.java.srcDirs += "src/main/kotlin"
+            }
+
+            defaultConfig {
+                applicationId "com.example.physio_app"
+                minSdk 21
+                targetSdk 34
+                versionCode 1
+                versionName "1.0.0"
+                multiDexEnabled true
+            }
+
+            buildTypes {
+                release {
+                    signingConfig signingConfigs.debug
+                }
+            }
         }
+
+        flutter {
+            source '../..'
+        }
+
         dependencies {
             coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
         }
