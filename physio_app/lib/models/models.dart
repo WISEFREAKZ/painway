@@ -33,6 +33,7 @@ class ExerciseModel {
   final String description;
   final List<String> steps;
   final String? mediaUrl;
+  final String? mediaAttribution;
   final int durationSeconds;
 
   ExerciseModel({
@@ -43,6 +44,7 @@ class ExerciseModel {
     required this.description,
     required this.steps,
     required this.mediaUrl,
+    required this.mediaAttribution,
     required this.durationSeconds,
   });
 
@@ -55,6 +57,9 @@ class ExerciseModel {
       description: (json['description'] as String?) ?? '',
       steps: _asStringList(json['steps']),
       mediaUrl: json['media_url'] as String?,
+      // Required credit line for third-party licensed media (e.g. Gym
+      // visual GIFs). Null for public-domain media, which needs none.
+      mediaAttribution: json['media_attribution'] as String?,
       durationSeconds: json['duration_seconds'] as int? ?? 30,
     );
   }

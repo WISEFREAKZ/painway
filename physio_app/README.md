@@ -72,34 +72,45 @@ Minimum SDK: set `minSdkVersion` to at least 23 in
 
 ### 4. Media assets
 
-The seed data now covers **8 categories and 133 exercises**: Foot & Heel
+The seed data covers **8 categories and 133 exercises**: Foot & Heel
 (Plantar Fasciitis), Hip & Pelvic Pain, Lower Back, Knee, Shoulder, Neck,
-Arms, and Legs. Every `media_url` points to a real, HTTP-verified
-(200 OK) image hosted on GitHub's raw CDN from
-[`free-exercise-db`](https://github.com/yuhonas/free-exercise-db), an
-open, Unlicense/public-domain exercise dataset — no API key or auth
-required. See the comment block at the top of the seed data in
-`supabase_schema.sql` for exactly which source exercise each image
-came from.
+Arms, and Legs. Media is mixed from two sources:
 
-**On GIFs vs static images:** true animated GIF demonstrations for
-these specific therapeutic exercise variations aren't available from a
-source with a genuinely verifiable open license. Datasets that do
-offer exercise GIFs are generally repackaging content from ExerciseDB,
-a commercial/closed API — a third-party repo slapping an MIT license
-on someone else's paid dataset doesn't make that redistribution
-legitimate, so using them would carry real copyright risk. `free-exercise-db`'s
-Unlicense (public-domain) status is directly confirmed by the
-maintainer's own repo, which is why it's used here despite being
-static images. If you later find or license real GIFs, swapping them
-in is a one-line change per row — `Image.network()` renders GIFs and
-static images identically, no app code changes needed.
+- **102 exercises** use static images from
+  [`free-exercise-db`](https://github.com/yuhonas/free-exercise-db)
+  (Unlicense/public domain, no attribution required).
+- **31 exercises** use animated GIFs from
+  [`hasaneyldrm/exercises-dataset`](https://github.com/hasaneyldrm/exercises-dataset).
+  This media is **not** public domain — it's owned by Gym visual, a
+  commercial stock-media company, and included in that repo under a
+  claimed permission arrangement that requires attribution to survive
+  reuse. **These 31 rows are appropriate for personal use only.** If
+  you ever distribute this app beyond yourself, swap those `media_url`
+  values back to `free-exercise-db` equivalents or your own licensed
+  media — the permission that repo claims doesn't extend to your
+  redistribution of it.
 
-Swap in your own images any time by updating the `exercises` table —
-no app rebuild needed. If your Supabase project was seeded from an
-earlier version of this file, uncomment the two `truncate` lines near
-the top of the seed data section before re-running, so you don't end
-up with duplicate rows.
+Only exercises where the name matched closely enough between the two
+datasets to be confident it's genuinely the same movement got a GIF —
+name-similarity matching alone produced false positives (e.g. "Sit
+Squats" vs. "Split Squats" scored 91% similar despite being different
+exercises), so anything uncertain kept its static image rather than
+risk showing the wrong exercise's animation. Every URL, both static
+and GIF, was individually HTTP-verified (200 OK) before being
+included — see the comment block at the top of the seed data in
+`supabase_schema.sql` for the full breakdown.
+
+The `exercises` table has a `media_attribution` column for exactly
+this situation — it's `null` for public-domain media and holds the
+required "© Gym visual — https://gymvisual.com/" credit line for the
+31 GIF rows. The app displays that credit line under the media
+viewport on the exercise guide screen whenever it's present.
+
+Swap in your own images/GIFs any time by updating the `exercises`
+table — no app rebuild needed. If your Supabase project was seeded
+from an earlier version of this file, uncomment the two `truncate`
+lines near the top of the seed data section before re-running, so you
+don't end up with duplicate rows.
 
 ## Building the APK
 
@@ -152,6 +163,55 @@ Before building for real use, remember to:
 3. Replace the debug-signed release build in `android/app/build.gradle`
    with your own signing config before publishing to the Play Store —
    debug signing is fine for personal installs/sideloading only.
+
+## If the built app is unexpectedly huge
+
+A release build of this app should land in the **15–30MB** range per
+architecture. If you're seeing hundreds of MB, two build settings were
+previously off and are now fixed in `android/app/build.gradle`:
+
+- `minifyEnabled`/`shrinkResources` were `false` — release builds
+  shipped every class and resource untouched, no dead-code or
+  dead-resource removal. Now `true`, with `proguard-rules.pro` added
+  alongside so R8 doesn't strip the reflection-based pieces
+  `flutter_local_notifications` actually needs at runtime (this is the
+  standard, documented gotcha with that plugin — skip the rules file
+  and notifications silently stop firing in release builds only).
+- There was no per-architecture splitting, so a plain `flutter build
+  apk` produced one "fat" APK bundling native code for all four CPU
+  architectures (arm64-v8a, armeabi-v7a, x86, x86_64) at once, each
+  potentially carrying full unstripped debug symbols. `splits { abi {} }`
+  now builds a separate, much smaller APK per architecture instead, and
+  `ndk { debugSymbolLevel = 'none' }` strips debug symbols from the
+  native libraries in the release build.
+
+**If you're building an `.aab` (App Bundle)** rather than a `.apk`,
+one more thing is worth knowing: an `.aab` file is *supposed* to look
+larger on disk than what a real user downloads. It's not a distributable
+app by itself — Play Store slices it into an optimized, per-device APK
+at install time (only the one architecture and set of resources that
+specific phone needs). So don't judge an `.aab`'s file size directly;
+judge the per-device download size Play Console reports after upload,
+or build a `.apk` locally to check directly.
+
+**To see exactly where size is going**, use Flutter's own built-in
+analyzer rather than guessing:
+
+```bash
+flutter build apk --release --analyze-size
+```
+
+This prints a full breakdown (Dart AOT code, native libraries per ABI,
+fonts, assets) and writes a detailed JSON report you can inspect in
+DevTools. For a normal-sized installable APK directly:
+
+```bash
+flutter build apk --release --split-per-abi
+```
+
+which produces `app-arm64-v8a-release.apk`,
+`app-armeabi-v7a-release.apk`, etc. — install the one matching your
+test device rather than a universal build.
 
 ## Notes on cost & maintenance
 

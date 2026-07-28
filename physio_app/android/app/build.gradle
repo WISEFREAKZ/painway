@@ -44,8 +44,38 @@ android {
             // one-command `flutter build apk` work out of the box.
             // Replace with your own signing config before publishing.
             signingConfig = signingConfigs.debug
-            minifyEnabled = false
-            shrinkResources = false
+
+            // Code + resource shrinking. Previously both were false,
+            // which (combined with no ABI splitting) is the main reason
+            // a release build of an app this small could balloon to
+            // hundreds of MB — every architecture's native libraries and
+            // every unused class/resource were being shipped untouched.
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // Strip native debug symbols from the release .so files.
+            // Unstripped symbols can add tens of MB per architecture.
+            ndk {
+                debugSymbolLevel = 'none'
+            }
+        }
+    }
+
+    // Build a separate, much smaller APK per CPU architecture instead of
+    // one "fat" APK/bundle containing all four architectures' native
+    // code at once. Only affects `flutter build apk`; App Bundles
+    // (`flutter build appbundle`) already do this automatically per
+    // device at install time via Play Store, which is expected — an
+    // .aab file always looks larger on disk than what a user actually
+    // downloads, since Play generates the optimized per-device APK from
+    // it on the fly.
+    splits {
+        abi {
+            enable true
+            reset()
+            include "armeabi-v7a", "arm64-v8a", "x86_64"
+            universalApk false
         }
     }
 }

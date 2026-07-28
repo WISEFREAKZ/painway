@@ -45,6 +45,19 @@ class _ExerciseGuideScreenState extends State<ExerciseGuideScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildMediaViewport(exercise.mediaUrl),
+            if (exercise.mediaAttribution != null &&
+                exercise.mediaAttribution!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                child: Text(
+                  exercise.mediaAttribution!,
+                  style: const TextStyle(
+                    color: AppColors.slate400,
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Column(
@@ -104,6 +117,12 @@ class _ExerciseGuideScreenState extends State<ExerciseGuideScreen> {
   /// Prominent top viewport rendering the looping animated exercise
   /// demonstration, with an explicit loading builder so slow open-source
   /// GIF hosts never show a blank/broken frame.
+  ///
+  /// Uses BoxFit.contain (not cover) so the entire image/GIF is always
+  /// visible, never cropped — important here since media comes from two
+  /// different sources with different aspect ratios (full-frame photos
+  /// vs. square 180x180 GIFs), and cropping could cut off part of the
+  /// demonstrated movement.
   Widget _buildMediaViewport(String? mediaUrl) {
     if (mediaUrl == null || mediaUrl.isEmpty) {
       return Container(
@@ -117,31 +136,26 @@ class _ExerciseGuideScreenState extends State<ExerciseGuideScreen> {
       );
     }
 
-    return Image.network(
-      mediaUrl,
+    return Container(
       height: 260,
       width: double.infinity,
-      fit: BoxFit.cover,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        final total = loadingProgress.expectedTotalBytes;
-        final loaded = loadingProgress.cumulativeBytesLoaded;
-        return Container(
-          height: 260,
-          color: AppColors.slate100,
-          child: Center(
+      color: AppColors.slate100,
+      child: Image.network(
+        mediaUrl,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          final total = loadingProgress.expectedTotalBytes;
+          final loaded = loadingProgress.cumulativeBytesLoaded;
+          return Center(
             child: CircularProgressIndicator(
               value: total != null ? loaded / total : null,
               strokeWidth: 2.5,
               color: AppColors.calmTeal,
             ),
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) => Container(
-        height: 260,
-        color: AppColors.slate100,
-        child: const Center(
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => const Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -175,7 +189,12 @@ class _ExerciseGuideScreenState extends State<ExerciseGuideScreen> {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 130,
+          // Was a hard 130px with no overflow handling — long
+          // instruction text got silently clipped at the bottom of the
+          // card. Taller now, and the content inside is wrapped in a
+          // scroll view (see itemBuilder below) so any step whose text
+          // still doesn't fit becomes scrollable instead of cut off.
+          height: 170,
           child: PageView.builder(
             controller: _pageController,
             itemCount: steps.length,
@@ -186,29 +205,31 @@ class _ExerciseGuideScreenState extends State<ExerciseGuideScreen> {
                 child: Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 14,
-                          backgroundColor: AppColors.calmTeal,
-                          child: Text(
-                            '${index + 1}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                    child: SingleChildScrollView(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: AppColors.calmTeal,
+                            child: Text(
+                              '${index + 1}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            steps[index],
-                            style: const TextStyle(height: 1.4),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              steps[index],
+                              style: const TextStyle(height: 1.4),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
