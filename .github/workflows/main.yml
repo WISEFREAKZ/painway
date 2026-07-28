@@ -17,21 +17,27 @@ jobs:
         channel: 'stable'
         cache: true
 
+    # Completely restores modified build files to a factory-fresh state 
+    - name: Reset Residual File Duplications
+      working-directory: ./physio_app
+      run: |
+        flutter clean
+        git checkout -- android/app/build.gradle || true
+        git checkout -- lib/theme.dart || true
+
     - name: Install Dependencies
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Locks in all the configurations that bypassed your NDK and notification errors
-    - name: Fix Code Typo and App Configs
+    # Safely injects the configurations onto a 100% clean canvas
+    - name: Apply Fresh Code Patches
       working-directory: ./physio_app
       run: |
         sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
+        sed -i '/android {/a \    ndkVersion "25.1.8937393"' android/app/build.gradle
         
         cat << 'EOF' >> android/app/build.gradle
-
-        // Injected by GitHub Actions pipeline to solve final package constraints
         android {
-            ndkVersion "25.1.8937393"
             defaultConfig {
                 multiDexEnabled true
             }
@@ -44,12 +50,10 @@ jobs:
         }
         EOF
 
-    # The exact command that worked before, just switched to --release
-    - name: Build APK
+    - name: Build APK (Release Mode)
       working-directory: ./physio_app
       run: flutter build apk --release --android-skip-build-dependency-validation
 
-    # Grabs the compressed production release file from its native path
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
