@@ -21,22 +21,16 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Step A: Generates the raw Android files from scratch
     - name: Initialize Flutter Build Files
       working-directory: ./physio_app
       run: flutter build apk --config-only
 
-    # Step B: Safe temporary environment modifications applied directly to the cloud runner
     - name: Apply Automated Code Patches
       working-directory: ./physio_app
       run: |
-        # Corrects the CardThemeData typo inside the theme configuration
         sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
-        
-        # Safely injects the precise NDK version parameter right into the newly generated build framework
         sed -i '/android {/a \    ndkVersion "25.1.8937393"' android/app/build.gradle
         
-        # Appends multiDex and the core library desugaring configurations required for your notification plugins
         cat << 'EOF' >> android/app/build.gradle
         android {
             defaultConfig {
@@ -51,15 +45,15 @@ jobs:
         }
         EOF
 
-    # Step C: Compiles release mode via isolated instructions
     - name: Build Production Release APK
       working-directory: ./physio_app/android
       run: |
         ./gradlew clean --no-daemon
         ./gradlew assembleRelease --no-daemon
 
+    # Corrected destination directory targets for the native gradle output configuration
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: my-flutter-release-app
-        path: physio_app/build/app/outputs/flutter-apk/app-release.apk
+        path: physio_app/android/app/build/outputs/apk/release/app-release.apk
