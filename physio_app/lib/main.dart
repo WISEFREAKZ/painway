@@ -1,33 +1,90 @@
 import 'package:flutter/material.dart';
-import 'services/supabase_config.dart';
-import 'services/notification_service.dart';
-import 'screens/dashboard_screen.dart';
-import 'theme.dart';
+import 'theme.dart'; // Seamlessly links your fixed theme mapping
 
-Future<void> main() async {
-  // Required before any plugin channel calls (Supabase init, notifications).
+void main() {
+  // Ensures native components initialize smoothly before the user interface draws
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize the read-only Supabase backend.
-  await SupabaseConfig.initialize();
-
-  // Initialize the local notification engine. Actual scheduling happens
-  // later, from the Dashboard settings sheet, once the user opts in.
-  await NotificationService().init();
-
-  runApp(const PhysioApp());
+  runApp(const MyApp());
 }
 
-class PhysioApp extends StatelessWidget {
-  const PhysioApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Physio & Mobility',
-      debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(),
-      home: const DashboardScreen(),
+      title: 'PainWay Physio',
+      debugShowCheckedModeBanner: false, // Disables the ugly debug banner in the corner
+      theme: appTheme, // Pulls the clean theme logic securely
+      home: const MainNavigationScreen(),
+    );
+  }
+}
+
+class MainNavigationScreen extends StatefulWidget {
+  const MainNavigationScreen({super.key});
+
+  @override
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+}
+
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  int _currentIndex = 0;
+
+  // Optimized list caching for your 2 screens to prevent rebuild layout loops
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    WorkoutScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center_rounded),
+            label: 'Workouts',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Temporary placeholder screens - ensure your actual UI files match these names!
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Welcome to PainWay Home')),
+    );
+  }
+}
+
+class WorkoutScreen extends StatelessWidget {
+  const WorkoutScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Your Physical Therapy Workouts')),
     );
   }
 }
