@@ -25,14 +25,10 @@ jobs:
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Fixes the code typo and appends ALL required NDK and desugaring blocks safely
     - name: Fix Code Typo and App Configs
       working-directory: ./physio_app
       run: |
-        # Corrects CardThemeData to CardTheme inside your theme file
         sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
-        
-        # Safely appends the NDK version, multiDex, and desugaring setups to the end of build.gradle
         cat << 'EOF' >> android/app/build.gradle
 
         // Injected by GitHub Actions pipeline to solve final package constraints
@@ -50,12 +46,14 @@ jobs:
         }
         EOF
 
+    # Switched to production release compilation
     - name: Build APK
       working-directory: ./physio_app
       run: flutter build apk --release --android-skip-build-dependency-validation
 
-    - name: Upload Finished APK!
+    # Updated to grab the compressed release file
+    - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
-        name: my-flutter-android-app
+        name: my-flutter-release-app
         path: physio_app/build/app/outputs/flutter-apk/app-release.apk
