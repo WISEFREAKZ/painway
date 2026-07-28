@@ -4,7 +4,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    # Forces a 100% clean check out of your repository code every single time
     - uses: actions/checkout@v4
+      with:
+        clean: true
 
     - name: Set up Java
       uses: actions/setup-java@v4
@@ -15,23 +18,20 @@ jobs:
       with:
         flutter-version: '3.22.x'
         channel: 'stable'
-        cache: true
-
-    - name: Clean Project
-      working-directory: ./physio_app
-      run: flutter clean
+        cache: false # Disables caching to prevent directory-watching errors
 
     - name: Install Dependencies
       working-directory: ./physio_app
       run: flutter pub get
 
+    # Fixes the code typo and appends configurations to a completely fresh file
     - name: Fix Code Typo and App Configs
       working-directory: ./physio_app
       run: |
         sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
+        
         cat << 'EOF' >> android/app/build.gradle
 
-        // Injected by GitHub Actions pipeline to solve final package constraints
         android {
             ndkVersion "25.1.8937393"
             defaultConfig {
@@ -46,12 +46,10 @@ jobs:
         }
         EOF
 
-    # Switched to production release compilation
     - name: Build APK
       working-directory: ./physio_app
       run: flutter build apk --release --android-skip-build-dependency-validation
 
-    # Updated to grab the compressed release file
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
