@@ -32,14 +32,14 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  // Fully complies with your repository's exact CategoryModel fields
+  // Uses integer 0 for the id to perfectly align with your CategoryModel types
   List<Widget> get _screens => [
         const DashboardScreen(),
         ExerciseListScreen(
           category: CategoryModel(
-            id: 'all',
+            id: 0, 
             name: 'All Exercises',
-            iconSlug: 'fitness_center', // Replaced with the exact field your model demands
+            iconSlug: 'fitness_center',
           ),
         ),
       ];
