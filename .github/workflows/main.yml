@@ -22,12 +22,6 @@ jobs:
         channel: 'stable'
         cache: true
 
-    - name: Pre-Inject Dependencies
-      working-directory: ./physio_app
-      run: |
-        # Safely appends the exact pinned Supabase dependency module to the root manifest config
-        echo "  supabase_flutter: 2.6.0" >> pubspec.yaml
-
     - name: Install Dependencies
       working-directory: ./physio_app
       run: flutter pub get
