@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-// 1. Explicitly imports your real, existing screen files into the entry file
 import 'screens/dashboard_screen.dart';
 import 'screens/exercise_list_screen.dart';
 
@@ -33,10 +31,10 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  // 2. Maps your real, existing dashboard and exercise screen files directly to the tabs
+  // Supplies the missing category string parameter to keep constructor signature compliant
   final List<Widget> _screens = const [
-    DashboardScreen(),    // First tab loads your real Dashboard Screen
-    ExerciseListScreen(),  // Second tab loads your real Exercise List Screen
+    DashboardScreen(),
+    ExerciseListScreen(category: 'All'), 
   ];
 
   @override
