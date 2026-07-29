@@ -1,6 +1,6 @@
 name: physio_app
 description: "A secure, high-performance physical therapy mobile application."
-publish_to: 'none' # Prevents accidental public publishing to pub.dev
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -12,12 +12,12 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Explicitly pinned versions matching your stable 3.22.x compilation profile
   cupertino_icons: 1.0.8
   flutter_local_notifications: 17.1.2 
   shared_preferences: 2.2.3
   url_launcher: 6.2.6
   app_links: 6.0.1
+  supabase_flutter: 2.6.0 # Restored securely directly under root dependencies
 
 dev_dependencies:
   flutter_test:
@@ -26,7 +26,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
-  # Clean, uncommented asset registration structure ready for your images
-  # assets:
-  #   - assets/images/
