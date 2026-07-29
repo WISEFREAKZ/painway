@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/exercise_list_screen.dart';
-
-// Imports your custom models folder to make CategoryModel visible here
 import 'models/models.dart'; 
 
 void main() {
@@ -28,29 +26,19 @@ class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const _MainNavigationScreenContent();
-  }
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenContent extends StatefulWidget {
-  const _MainNavigationScreenContent();
-
-  @override
-  State<_MainNavigationScreenContent> createState() => _MainNavigationScreenContentState();
-}
-
-class _MainNavigationScreenContentState extends State<_MainNavigationScreenContent> {
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  // Lazily computes the screen collection to pass a fully valid model constructor instance
+  // Fully complies with your custom model parameters by removing the non-existent icon field
   List<Widget> get _screens => [
         const DashboardScreen(),
         ExerciseListScreen(
           category: CategoryModel(
             id: 'all',
             name: 'All Exercises',
-            icon: 'fitness_center', // Matches standard fallback properties
           ),
         ),
       ];
