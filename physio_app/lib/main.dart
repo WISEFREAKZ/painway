@@ -32,13 +32,14 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  // Fully complies with your custom model parameters by removing the non-existent icon field
+  // Fully complies with your repository's exact CategoryModel fields
   List<Widget> get _screens => [
         const DashboardScreen(),
         ExerciseListScreen(
           category: CategoryModel(
             id: 'all',
             name: 'All Exercises',
+            iconSlug: 'fitness_center', // Replaced with the exact field your model demands
           ),
         ),
       ];
