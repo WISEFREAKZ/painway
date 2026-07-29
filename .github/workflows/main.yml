@@ -6,6 +6,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Scan Project Screens Directory
+      run: |
+        echo "=== SCANNING LIB DIRECTORY ==="
+        ls -R physio_app/lib
+
     - name: Set up Java
       uses: actions/setup-java@v4
       with: {java-version: '17', distribution: 'temurin'}
@@ -17,17 +22,22 @@ jobs:
         channel: 'stable'
         cache: true
 
+    - name: Pre-Inject Dependencies
+      working-directory: ./physio_app
+      run: |
+        # Safely appends the exact pinned Supabase dependency module to the root manifest config
+        echo "  supabase_flutter: 2.6.0" >> pubspec.yaml
+
     - name: Install Dependencies
       working-directory: ./physio_app
       run: flutter pub get
 
-    # Fixes the code typo and forces a brand new, perfectly formatted configuration file
-    - name: Apply Fresh Code Patches
+    - name: Apply Automated Code Patches
       working-directory: ./physio_app
       run: |
         sed -i 's/CardThemeData/CardTheme/g' lib/theme.dart
+        sed -i 's/theme: appTheme/theme: ThemeData.light()/g' lib/main.dart
         
-        # Overwrites the app's build.gradle completely with a flawless, compliant configuration
         cat << 'EOF' > android/app/build.gradle
         plugins {
             id "com.android.application"
