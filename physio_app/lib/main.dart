@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'theme.dart'; // Seamlessly links your fixed theme mapping
 
 void main() {
   // Ensures native components initialize smoothly before the user interface draws
@@ -14,8 +13,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PainWay Physio',
-      debugShowCheckedModeBanner: false, // Disables the ugly debug banner in the corner
-      theme: appTheme, // Pulls the clean theme logic securely
+      debugShowCheckedModeBanner: false, // Disables the debug banner in the corner
+      theme: ThemeData.light(), // Uses a safe, universal native material theme setup
       home: const MainNavigationScreen(),
     );
   }
@@ -33,8 +32,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   // Optimized list caching for your 2 screens to prevent rebuild layout loops
   final List<Widget> _screens = const [
-    HomeScreen(),
-    WorkoutScreen(),
+    HomeScreenPlaceholder(),
+    WorkoutScreenPlaceholder(),
   ];
 
   @override
@@ -66,9 +65,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 }
 
-// Temporary placeholder screens - ensure your actual UI files match these names!
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+// Temporary placeholder screens used until your main feature files are linked up
+class HomeScreenPlaceholder extends StatelessWidget {
+  const HomeScreenPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +77,8 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class WorkoutScreen extends StatelessWidget {
-  const WorkoutScreen({super.key});
+class WorkoutScreenPlaceholder extends StatelessWidget {
+  const WorkoutScreenPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {
