@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/exercise_list_screen.dart';
 
+// Imports your custom models folder to make CategoryModel visible here
+import 'models/models.dart'; 
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
@@ -25,17 +28,32 @@ class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  Widget build(BuildContext context) {
+    return const _MainNavigationScreenContent();
+  }
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _MainNavigationScreenContent extends StatefulWidget {
+  const _MainNavigationScreenContent();
+
+  @override
+  State<_MainNavigationScreenContent> createState() => _MainNavigationScreenContentState();
+}
+
+class _MainNavigationScreenContentState extends State<_MainNavigationScreenContent> {
   int _currentIndex = 0;
 
-  // Supplies the missing category string parameter to keep constructor signature compliant
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    ExerciseListScreen(category: 'All'), 
-  ];
+  // Lazily computes the screen collection to pass a fully valid model constructor instance
+  List<Widget> get _screens => [
+        const DashboardScreen(),
+        ExerciseListScreen(
+          category: CategoryModel(
+            id: 'all',
+            name: 'All Exercises',
+            icon: 'fitness_center', // Matches standard fallback properties
+          ),
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
