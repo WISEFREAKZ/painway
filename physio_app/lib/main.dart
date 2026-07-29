@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+// 1. Explicitly imports your real, existing screen files into the entry file
+import 'screens/dashboard_screen.dart';
+import 'screens/exercise_list_screen.dart';
+
 void main() {
-  // Ensures native components initialize smoothly before the user interface draws
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
@@ -13,8 +16,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PainWay Physio',
-      debugShowCheckedModeBanner: false, // Disables the debug banner in the corner
-      theme: ThemeData.light(), // Uses a safe, universal native material theme setup
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light(),
       home: const MainNavigationScreen(),
     );
   }
@@ -30,10 +33,10 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  // Optimized list caching for your 2 screens to prevent rebuild layout loops
+  // 2. Maps your real, existing dashboard and exercise screen files directly to the tabs
   final List<Widget> _screens = const [
-    HomeScreenPlaceholder(),
-    WorkoutScreenPlaceholder(),
+    DashboardScreen(),    // First tab loads your real Dashboard Screen
+    ExerciseListScreen(),  // Second tab loads your real Exercise List Screen
   ];
 
   @override
@@ -61,29 +64,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// Temporary placeholder screens used until your main feature files are linked up
-class HomeScreenPlaceholder extends StatelessWidget {
-  const HomeScreenPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Welcome to PainWay Home')),
-    );
-  }
-}
-
-class WorkoutScreenPlaceholder extends StatelessWidget {
-  const WorkoutScreenPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Your Physical Therapy Workouts')),
     );
   }
 }
