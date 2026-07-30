@@ -60,7 +60,7 @@ jobs:
 
             defaultConfig {
                 applicationId "com.example.physio_app"
-                minSdk 21
+                minSdk 23
                 targetSdk 34
                 versionCode 1
                 versionName "1.0.0"
@@ -71,7 +71,20 @@ jobs:
                 release {
                     signingConfig signingConfigs.debug
                     minifyEnabled true
+                    shrinkResources true
                     proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                    ndk {
+                        debugSymbolLevel 'none'
+                    }
+                }
+            }
+
+            splits {
+                abi {
+                    enable true
+                    reset()
+                    include "armeabi-v7a", "arm64-v8a", "x86_64"
+                    universalApk false
                 }
             }
         }
