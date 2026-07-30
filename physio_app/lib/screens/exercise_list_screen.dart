@@ -7,10 +7,12 @@ import 'exercise_guide_screen.dart';
 /// Screen B — Exercise List View.
 ///
 /// Queries Supabase for every exercise where `category_id` matches the
-/// selected category and renders a fast, scannable list.
+/// selected category and renders a fast, scannable list. Pass `category:
+/// null` to show every exercise across all categories instead (used by
+/// the "Workouts" tab).
 class ExerciseListScreen extends StatefulWidget {
-  final CategoryModel category;
-  const ExerciseListScreen({super.key, required this.category});
+  final CategoryModel? category;
+  const ExerciseListScreen({super.key, this.category});
 
   @override
   State<ExerciseListScreen> createState() => _ExerciseListScreenState();
@@ -22,21 +24,24 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   @override
   void initState() {
     super.initState();
-    _exercisesFuture =
-        SupabaseConfig.fetchExercisesByCategory(widget.category.id);
+    _exercisesFuture = _fetch();
+  }
+
+  Future<List<ExerciseModel>> _fetch() {
+    final category = widget.category;
+    return category == null
+        ? SupabaseConfig.fetchAllExercises()
+        : SupabaseConfig.fetchExercisesByCategory(category.id);
   }
 
   void _retry() {
-    setState(() {
-      _exercisesFuture =
-          SupabaseConfig.fetchExercisesByCategory(widget.category.id);
-    });
+    setState(() => _exercisesFuture = _fetch());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.category.name)),
+      appBar: AppBar(title: Text(widget.category?.name ?? 'All Exercises')),
       body: FutureBuilder<List<ExerciseModel>>(
         future: _exercisesFuture,
         builder: (context, snapshot) {

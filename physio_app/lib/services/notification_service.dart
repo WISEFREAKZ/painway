@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
 
@@ -271,5 +272,50 @@ class NotificationService {
   /// user disables all reminders from Settings.
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
+  }
+
+  // ---------------------------------------------------------------------
+  // SELF-HEALING RESCHEDULE
+  // ---------------------------------------------------------------------
+
+  /// Re-arms any reminders the person has enabled, reading straight from
+  /// the same SharedPreferences keys the Settings sheet writes to.
+  ///
+  /// WHY THIS EXISTS: `matchDateTimeComponents` "daily repeat" isn't a
+  /// native OS-level repeating alarm — Android's exact alarms are
+  /// one-shot. After each notification fires, the plugin's own native
+  /// receiver code is supposed to silently reschedule the next
+  /// occurrence. If the OS kills the app process before that reschedule
+  /// runs (common with aggressive OEM battery managers on Xiaomi,
+  /// Huawei, Samsung, OnePlus, etc.), that chain breaks and the
+  /// notification never fires again — this is a known, still-open issue
+  /// in flutter_local_notifications itself, not something specific to
+  /// this app. There's no way to fully code around the OS killing a
+  /// process, but calling this once on every app launch means any
+  /// broken chain repairs itself the next time the person opens the
+  /// app, rather than staying silently broken forever.
+  ///
+  /// Call this once, after [init], every time the app starts.
+  Future<void> rescheduleFromSavedPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final waterEnabled = prefs.getBool('pref_water_enabled') ?? true;
+    final stretchEnabled = prefs.getBool('pref_stretch_enabled') ?? true;
+    final stretchHour = prefs.getInt('pref_stretch_hour') ?? 7;
+    final stretchMinute = prefs.getInt('pref_stretch_minute') ?? 30;
+
+    try {
+      if (waterEnabled) {
+        await scheduleWaterReminders();
+      }
+      if (stretchEnabled) {
+        await scheduleStretchReminder(
+          TimeOfDay(hour: stretchHour, minute: stretchMinute),
+        );
+      }
+    } catch (_) {
+      // Best-effort — if this fails (e.g. permissions revoked since last
+      // launch), don't crash app startup over it. The Settings sheet
+      // still surfaces real errors when the person next opens it.
+    }
   }
 }

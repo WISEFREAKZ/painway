@@ -67,4 +67,28 @@ class SupabaseConfig {
           'Could not load exercises for this category. Please try again.');
     }
   }
+
+  /// Fetches every exercise across all categories, for the "Workouts"
+  /// tab's "All Exercises" view. Previously this screen was faked by
+  /// passing a `CategoryModel(id: 0, ...)` into fetchExercisesByCategory,
+  /// but no category has id 0 (Postgres identity columns start at 1), so
+  /// that tab always silently returned zero rows. This queries the
+  /// table directly with no category filter instead.
+  static Future<List<ExerciseModel>> fetchAllExercises() async {
+    try {
+      final response = await client
+          .from('exercises')
+          .select()
+          .order('category_id')
+          .order('id')
+          .timeout(const Duration(seconds: 10));
+
+      return (response as List)
+          .map((row) => ExerciseModel.fromJson(row as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception(
+          'Could not load exercises. Check your connection and try again.');
+    }
+  }
 }
